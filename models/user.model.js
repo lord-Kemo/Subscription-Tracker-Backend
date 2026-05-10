@@ -5,8 +5,8 @@ const userSchema = new mongoose.Schema({
     type : String,
     required : [true, 'User Name is required'],
     trim : true,
-    minL : 2,
-    maxL : 50,
+    minLength : 2,
+    maxLength : 50,
   },
   email : {
     type : String,
@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
     required : [true, 'User Password is required'],
     minLength : 6,
   }
-}, {Timestamp : true});
+}, {timestamps : true});
 
 const User = mongoose.model('User', userSchema);
 
