@@ -28,6 +28,7 @@ export const signUp = async (req, res, next) => {
       const newUser = new User({ name, email, password: hashedPassword });
       await newUser.save({ session });
 
+      // create a token for the user
       const token = jwt.sign(
         { userID: newUser._id },
         JWT_SECRET,
@@ -36,13 +37,13 @@ export const signUp = async (req, res, next) => {
       await session.commitTransaction();
       session.endSession();
 
+      // send the token in the response
       res.status(201).json({
         status: "success",
         message: "User created successfully",
         data: {
           user: newUser,
           token,
-
         }
       });
 
@@ -84,14 +85,22 @@ export const signIn = async (req, res, next) => {
     await session.commitTransaction();
     session.endSession();
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: JWT_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
-      status: "success",
-      message: "User signed in successfully",
+      status: 'success',
+      message: 'User signed in successfully',
       data: {
         user,
         token,
       }
     });
+
   }catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -99,14 +108,20 @@ export const signIn = async (req, res, next) => {
     }
 };
 
-export const SignOut = async (req, res, next) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    //
+export const signOut = async (req, res, next) => {
+  // i wil clear the cookie from the browser 
+  try{
+    res.cookie('token', '',
+      {
+        httpOnly: true,
+        expires: new Date(0),
+      }
+    );
+    res.status(200).json({
+      status: 'success',
+      message: 'User signed out successfully',
+    });
   }catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     next(error);
   }
 };
